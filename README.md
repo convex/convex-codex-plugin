@@ -13,7 +13,7 @@ codex plugin add convex@convex-codex-plugin
 
 This installs the full, current plugin (all skills + both MCP servers). Confirm with `codex plugin list` — you want `convex@convex-codex-plugin` at the version in [`plugins/convex/.codex-plugin/plugin.json`](plugins/convex/.codex-plugin/plugin.json).
 
-> **Heads up on the OpenAI-curated listing.** If you install `convex` from OpenAI's curated/ChatGPT-app source instead, you may get an older published snapshot (the curated registry serves the last *submitted* build, not this repo's HEAD — see [OPENAI-SUBMISSION.md](OPENAI-SUBMISSION.md)). The GitHub-marketplace command above always gets the current build. If a curated install ever seems to have no skills or MCP servers, remove it (`codex plugin remove convex@openai-curated`) and use the command above.
+> **Heads up on the OpenAI-curated listing.** If you install `convex` from OpenAI's curated/ChatGPT-app source instead, you may get an older published snapshot (the curated registry serves the last _submitted_ build, not this repo's HEAD — see [OPENAI-SUBMISSION.md](OPENAI-SUBMISSION.md)). The GitHub-marketplace command above always gets the current build. If a curated install ever seems to have no skills or MCP servers, remove it (`codex plugin remove convex@openai-curated`) and use the command above.
 
 Then invoke the skills (`quickstart`, `add`, `convex-expert`, `convex-reviewer`, `check-updates`, `improve-convex-plugin`). The plugin also registers two MCP servers: the official Convex MCP (live-deployment introspection) and an error-watcher.
 
@@ -51,27 +51,15 @@ Review my app architecture before launch.
 
 ## Privacy & data
 
-This plugin connects to Convex services and collects anonymous usage data. See the
-[Convex privacy policy](https://convex.dev/legal/privacy) for full details and your rights.
-Three kinds of data can leave your machine, each governed by a rule that holds no matter
-which command triggers it:
+This plugin connects to Convex services and collects anonymous usage data. See the [Convex privacy policy](https://convex.dev/legal/privacy) for full details and your rights. Three kinds of data can leave your machine, each governed by a rule that holds no matter which command triggers it:
 
 ### 1. Anonymous usage telemetry (on by default, opt-out)
 
-The plugin's bundled MCP server sends anonymous telemetry to Convex's PostHog project
-when a session starts: a random device id, the plugin version, your OS and Node.js version, which agent
-harness emitted the event (always `codex` for this plugin). The first time the agent uses the plugin's error-fixing tool, it also sends whether the workspace
-looks like a Convex project (a yes/no flag — the directory path itself is never sent).
-Never your code, file paths, prompts, or personal identifiers. Opt out with
-`CONVEX_PLUGIN_TELEMETRY=0` or `DO_NOT_TRACK=1`.
+The plugin's bundled MCP server sends anonymous telemetry to Convex's PostHog project when a session starts: a random device id, the plugin version, your OS and Node.js version, which agent harness emitted the event (always `codex` for this plugin). The first time the agent uses the plugin's error-fixing tool, it also sends whether the workspace looks like a Convex project (a yes/no flag — the directory path itself is never sent). Never your code, file paths, prompts, or personal identifiers. Opt out with `CONVEX_PLUGIN_TELEMETRY=0` or `DO_NOT_TRACK=1`.
 
 ### 2. Building your app (only when you invoke a scaffolding flow)
 
-Flows that scaffold or extend an app (such as `quickstart` and `/add`) send the inputs you
-give them to the Convex scaffolding service so it can build for you — for example, the
-one-sentence idea you type is sent to the scaffolding endpoint and logged as a run start.
-These flows also download and run setup scripts from that service. This happens only when
-you invoke such a flow.
+Flows that scaffold or extend an app (such as `quickstart` and `/add`) send the inputs you give them to the Convex scaffolding service so it can build for you — for example, the one-sentence idea you type is sent to the scaffolding endpoint and logged as a run start. These flows also download and run setup scripts from that service. This happens only when you invoke such a flow.
 
 ### 3. Sharing a session to improve the tools (one-time, explicit opt-in)
 
