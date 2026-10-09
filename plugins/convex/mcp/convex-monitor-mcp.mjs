@@ -34,7 +34,6 @@ import { pathToFileURL } from "node:url";
 import { exec as execCb } from "node:child_process";
 import { promisify } from "node:util";
 
-import { capture, isConvexProject } from "./analytics.mjs";
 
 const exec = promisify(execCb);
 
@@ -448,8 +447,6 @@ async function waitForConvexEvent(args = {}) {
     process.env.CODEX_WORKSPACE_ROOT ||
     process.env.PWD ||
     process.cwd();
-  // First reliable sight of the real project dir on Codex — emit convex_project.
-  trackConvexProject(projectDir);
   const timeoutMs = Math.max(5000, Math.min(args.timeoutMs ?? 90_000, 290_000));
   const queries = args.queries || CONFIG.defaultQueries;
 
@@ -644,54 +641,12 @@ function send(msg) { process.stdout.write(JSON.stringify(msg) + "\n"); }
 function reply(id, result) { send({ jsonrpc: "2.0", id, result }); }
 function replyErr(id, code, message) { send({ jsonrpc: "2.0", id, error: { code, message } }); }
 
-// ------------------------------------------------------------- telemetry
-// One anonymous `plugin_session_start` per server process, fired on the MCP
-// `initialize` handshake — the moment a Codex session actually wires this
-// plugin up. Codex analog of the Claude plugin's SessionStart hook: same event
-// name, same PostHog project, `harness: "codex"` (stamped by analytics.mjs)
-// tells the surfaces apart. capture() is a no-op when opted out
-// (CONVEX_PLUGIN_TELEMETRY=0 / DO_NOT_TRACK) and never throws or touches stdout,
-// so the handshake cannot be affected.
-//
-// NOTE: `convex_project` is deliberately NOT on this event. Codex spawns plugin
-// MCP servers with cwd = the plugin bundle dir and a STRIPPED env (no PWD, no
-// workspace var, no MCP roots), so at `initialize` there is no project-dir
-// channel — every probe resolves to the bundle and reports `convex_project:
-// false` for every user, structurally (the earlier unit tests injected the env
-// directly, so they validated the logic, not the spawn reality). The only
-// reliable project-dir channel on Codex is the fix_errors_automatically tool
-// call args, so convex_project is derived lazily from the first call (see
-// trackConvexProject + POSTHOG.md §7).
-let sessionStartTracked = false;
-function trackSessionStart() {
-  if (sessionStartTracked) return;
-  sessionStartTracked = true;
-  capture("plugin_session_start", {
-    os: process.platform,
-    node_version: process.version,
-  });
-}
-
-// Lazy `convex_project` for Codex: emitted once per process, on the FIRST
-// fix_errors_automatically tool call, whose `projectDir` arg is the only place
-// the real working directory is exposed to the MCP server. Only the boolean
-// leaves the machine, never the path.
-let convexProjectTracked = false;
-function trackConvexProject(projectDir) {
-  if (convexProjectTracked) return;
-  convexProjectTracked = true;
-  capture("plugin_convex_project", {
-    convex_project: isConvexProject(projectDir),
-  });
-}
-
 async function handle(msg) {
   const { id, method, params } = msg;
   switch (method) {
     case "initialize": {
-      // Emit session-start telemetry (harness=codex), then include the freshness
-      // upgrade nudge as MCP instructions when stale. Bounded + fail-open.
-      trackSessionStart();
+      // Include the freshness upgrade nudge as MCP instructions when stale.
+      // Bounded + fail-open.
       const nudge = await freshnessReady;
       const result = {
         protocolVersion: PROTOCOL_VERSION,

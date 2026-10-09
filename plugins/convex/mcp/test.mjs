@@ -53,8 +53,8 @@ await new Promise((r) => specSrv.listen(0, "127.0.0.1", r));
 const SPEC_URL = `http://127.0.0.1:${specSrv.address().port}/monitors.json`;
 
 const srvErr = [];
-// CONVEX_PLUGIN_TELEMETRY=0 on every spawned server: tests must never send
-// real telemetry (initialize fires plugin_session_start — see analytics.mjs).
+// CONVEX_PLUGIN_TELEMETRY=0 on every spawned server: it turns off the update
+// check, so tests never call out to the network.
 const srv = spawn("node", [SERVER], { stdio: ["pipe", "pipe", "pipe"], env: { ...process.env, CONVEX_MONITOR_SPEC_URL: SPEC_URL, CONVEX_PLUGIN_TELEMETRY: "0" } });
 srv.stderr.on("data", (d) => { srvErr.push(d.toString()); process.stderr.write(d); });
 let buf = "";

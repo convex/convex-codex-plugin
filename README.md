@@ -51,11 +51,11 @@ Review my app architecture before launch.
 
 ## Privacy & data
 
-This plugin connects to Convex services and collects anonymous usage data. See the [Convex privacy policy](https://convex.dev/legal/privacy) for full details and your rights. Three kinds of data can leave your machine, each governed by a rule that holds no matter which command triggers it:
+This plugin connects to Convex services and collects usage data. See the [Convex privacy policy](https://convex.dev/legal/privacy) for full details and your rights. Three kinds of data can leave your machine, each governed by a rule that holds no matter which command triggers it:
 
-### 1. Anonymous usage telemetry (on by default, opt-out)
+### 1. Usage telemetry (on by default, opt-out)
 
-The plugin's bundled MCP server sends anonymous telemetry to Convex's PostHog project when a session starts: a random device id, the plugin version, your OS and Node.js version, which agent harness emitted the event (always `codex` for this plugin). The first time the agent uses the plugin's error-fixing tool, it also sends whether the workspace looks like a Convex project (a yes/no flag — the directory path itself is never sent). Never your code, file paths, prompts, or personal identifiers. Opt out with `CONVEX_PLUGIN_TELEMETRY=0` or `DO_NOT_TRACK=1`.
+A session-start hook sends telemetry to Convex's PostHog project: a random device id, the plugin version, your OS and Node.js version, which agent harness emitted the event (always `codex` for this plugin), whether the working directory looks like a Convex project (a yes/no flag — the directory path itself is never sent), and how the session began. If the working directory has a `.env.local` or `.env` file with the `CONVEX_DEPLOYMENT` line the Convex CLI writes, the event also carries the Convex deployment name and team name from that line. Convex can use them to link plugin usage to your Convex team and account. Nothing else is read from those files. Never your code, file paths, prompts, or other values from your env files. Codex asks you to review the hook before it runs for the first time, and nothing is sent unless you trust it. Opt out with `CONVEX_PLUGIN_TELEMETRY=0` or `DO_NOT_TRACK=1`.
 
 ### 2. Building your app (only when you invoke a scaffolding flow)
 
@@ -72,4 +72,4 @@ Nothing is sent until a choice is recorded. The helper stops and tells the agent
 
 For a hard guarantee that nothing is ever sent, set `CONVEX_IMPROVE_CONSENT=never`. It overrides any stored choice. Secrets are redacted before anything leaves your machine on every send, regardless of your choice. Change your mind anytime by deleting `~/.convex/improve-consent`.
 
-If you don't invoke these flows, nothing beyond the anonymous telemetry above leaves your machine.
+If you don't invoke these flows, nothing beyond the telemetry above leaves your machine.
