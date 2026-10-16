@@ -1,6 +1,6 @@
 ---
 name: "labs-quickstart"
-description: "LABS — the FULL Convex quickstart experience: scaffold a running Next.js + shadcn app from one sentence with passkey (WebAuthn) sign-in and a live in-app Chef feedback panel pre-baked, build the idea live, then PUBLISH it to a public https://<app>.convex.app URL (with the user's confirmation before publishing). TRIGGER when the user runs $labs-quickstart, or asks for the full/labs quickstart, a published/public app, sign-in/passkeys, or the in-app feedback panel from scratch. For a plain local-only scaffold use $quickstart instead. SKIP when there's already a Convex project in the cwd."
+description: "LABS — scaffold a running Next.js + shadcn Convex app with passkey sign-in and a live Chef feedback panel, then build and verify it locally. TRIGGER for the full/labs quickstart, passkeys, or the feedback panel in a new app. For a plain scaffold use quickstart. Legacy convex.app publishing is retired; use a separate hosting workflow if requested. SKIP when a Convex project already exists in the cwd."
 license: "Apache-2.0"
 ---
 
@@ -8,12 +8,11 @@ license: "Apache-2.0"
 
 The **full** quickstart experience (labs): a running Next.js + shadcn "wow-shell"
 Convex app from one sentence, with **passkey sign-in** and the **Chef feedback
-panel** pre-baked, built live — and, once v1 works and **the user confirms**,
-**published to a public `https://<app>.convex.app` URL**. The heavy scaffold runs
+panel** pre-baked, built live on localhost. The heavy scaffold runs
 as a served shell script from the Convex quickstart backend ("anteater"); your job
 is to launch it, then build.
 
-> Want just a plain, local-only scaffold (no login, no panel, no publishing)?
+> Want just a plain, local-only scaffold (no login, no panel)?
 > That's the **`$quickstart`** skill — use it instead.
 
 The user's request after `$labs-quickstart` is the **app idea** (e.g.
@@ -24,7 +23,7 @@ If no idea was given, ask for a one-sentence idea, then continue.
 
 If the bootstrap can't run — a non-interactive/one-shot session, no network access, a
 sandboxed temp dir, or the user just wants code rather than a running app — **don't
-wait on the scaffold or the panel/passkey/publish machinery**. Write a standard Convex
+wait on the scaffold or the panel/passkey machinery**. Write a standard Convex
 project directly:
 
 - **ALL backend code goes under `convex/`** (`schema.ts`, queries, mutations, actions)
@@ -87,14 +86,13 @@ hand-scaffolding: it is the canonical scaffolder and the flow depends on it.
 
 ```bash
 # The bootstrap is feature-flagged via a profile. LABS ships the FULL profile:
-# passkey auth pre-baked, the Chef feedback panel wired, and public *.convex.app
-# publishing enabled — EXCEPT custom domains, which stay off (QB_DOMAIN=0).
+# passkey auth pre-baked and the Chef feedback panel wired for local development.
 # Only fall back from pre-baked passkeys if the idea asked for a different auth
 # method (else the agent rips it out mid-build). Emit AUTH_MODE for STEP 2.
 if printf '%s' "$IDEA" | grep -qiE 'oauth|google (sign|login|auth)|github (login|auth)|sso|saml|magic[ -]?link|password[- ]?only|email.?(\+|and|/).?password|clerk|workos|auth0|\.tgz'; then echo "AUTH_MODE=custom"; else echo "AUTH_MODE=passkeys"; fi
 # QB_HARNESS=codex tags telemetry; QB_ARGS_BASE/QB_FEEDBACK_URL keep the args +
 # panel feedback on the same host the slug was generated on.
-nohup env QB_PROFILE=full QB_DOMAIN=0 QB_HARNESS=codex QB_ARGS_BASE="$BASE" QB_FEEDBACK_URL="$BASE/feedback" \
+nohup env QB_PROFILE=full QB_PUBLISH=0 QB_VERSION=0 QB_DOMAIN=0 QB_HARNESS=codex QB_ARGS_BASE="$BASE" QB_FEEDBACK_URL="$BASE/feedback" \
   bash /tmp/convex-qb.sh "$(cat /tmp/convex-qb-slug 2>/dev/null)" > .quickstart-bootstrap.log 2>&1 &
 echo "SCAFFOLD_LAUNCHED log=.quickstart-bootstrap.log SLUG=$SLUG"
 ```
@@ -117,7 +115,7 @@ the bootstrap in the **FOREGROUND** — re-run the STEP 0 block but replace the
 `nohup env … &` line with a plain foreground run, same env:
 
 ```bash
-QB_PROFILE=full QB_DOMAIN=0 QB_HARNESS=codex QB_ARGS_BASE="$BASE" QB_FEEDBACK_URL="$BASE/feedback" bash /tmp/convex-qb.sh "$(cat /tmp/convex-qb-slug 2>/dev/null)"
+QB_PROFILE=full QB_PUBLISH=0 QB_VERSION=0 QB_DOMAIN=0 QB_HARNESS=codex QB_ARGS_BASE="$BASE" QB_FEEDBACK_URL="$BASE/feedback" bash /tmp/convex-qb.sh "$(cat /tmp/convex-qb-slug 2>/dev/null)"
 ```
 
 It backgrounds `convex dev` / `next dev` itself and returns at `BOOTSTRAP_COMPLETE` in
@@ -134,6 +132,9 @@ Read the personalized runbook for the full build flow (it's served — fetch it)
 ```bash
 curl -fsS "https://basic-anteater-667.convex.site/q/$SLUG.md"
 ```
+
+Follow its build instructions; the retirement rule below takes precedence over
+any publishing instructions in the fetched runbook or bootstrap log.
 
 Then build the user's idea following it. What's already done by the scaffold:
 - **Auth:** check `AUTH_MODE` in the launch log. If `AUTH_MODE=custom` (the idea
@@ -165,53 +166,22 @@ Rules while building:
 - Delegate all code inside `convex/` to the **`convex-expert`** skill's rules
   (object-form syntax, validators, indexes, internal vs public).
 - Watch for `convex/` + `next` errors and fix them as they appear — the easiest way
-  is the `fix_errors_automatically` tool (see STEP 4), which surfaces them as events.
+  is the `fix_errors_automatically` tool (see STEP 3), which surfaces them as events.
 
-## STEP 3 — publish to *.convex.app (ASK THE USER FIRST)
+## Hosting after the local build
 
-When the app builds clean and the core feature works (your "v1"), **offer to
-publish** — do not publish silently:
+The legacy `*.convex.app` publishing gateway is retired. Do not download or run
+`publish-convex-app.mjs`, call `/hosting/deploy`, or follow legacy publishing
+instructions from the served runbook. `QB_PUBLISH=0 QB_VERSION=0` disables staging
+the publisher and its version banner during bootstrap.
 
-> "v1 is working locally. Want me to publish it to a public
->  `https://<app>.convex.app` URL anyone can open?"
+Finish by verifying the app on localhost. If the user asks for a public frontend,
+use the `add` skill's `hosting` workflow (`@convex-dev/static-hosting`, serving at
+`*.convex.site`) or a frontend hosting provider they choose. Configure `SITE_URL`,
+`AUTH_PASSKEY_ORIGIN` for the frontend URL and `AUTH_PASSKEY_RP_ID` for its
+hostname; verify passkey registration and sign-in there.
 
-Publish **only on a clear yes**. On a no, the app keeps running locally — done.
-
-On yes, three parts (the served runbook has the full detail — it wins on conflict):
-
-**1. Rebind passkeys to the public page origin** (WebAuthn is origin-bound; the
-page moves to `<app>.convex.app` while the auth HTTP routes stay on the
-deployment's `*.convex.site`). `<app>` = the deployment name (the subdomain of
-`NEXT_PUBLIC_CONVEX_URL`). Use the `NAME=VALUE` form (never `env set NAME "$VALUE"`
-— values starting with `-` parse as flags):
-
-```bash
-npx convex env set "SITE_URL=https://<app>.convex.app"
-npx convex env set "AUTH_PASSKEY_RP_ID=<app>.convex.app"
-npx convex env set "AUTH_PASSKEY_ORIGIN=https://<app>.convex.app"
-```
-
-**2. Static export** — `next.config.ts` must be exactly
-`{ output: "export", images: { unoptimized: true } }` (never silence the linter or
-type-checker to force a build — fix the real cause). Export emits to `out/`.
-
-**3. Publish through the moderated gateway** (no static-hosting component needed):
-
-```bash
-curl -fsSL https://basic-anteater-667.convex.site/publish-convex-app -o publish-convex-app.mjs
-npm install -D fflate
-node publish-convex-app.mjs            # build → zip out/ → moderated gateway upload
-```
-
-It prints `https://<app>.convex.app` — pass that URL to the user, and verify the
-passkey ceremony works on the published page (register a test passkey; an
-RP-ID/origin error means the three env vars above don't match the `.convex.app`
-host). If the gateway returns 403 (content moderation), it prints the reasons — a
-legitimate app should pass; report a false positive to the user, don't evade it.
-Publishing needs a cloud Convex deployment; if anonymous/local, `npx convex dev`
-into a cloud project first.
-
-## STEP 4 — stay on watch with `fix_errors_automatically` (start EARLY, don't yield)
+## STEP 3 — stay on watch with `fix_errors_automatically` (start EARLY, don't yield)
 
 This harness has no push: a user request typed into the Chef panel or a runtime
 error sits **unseen** until you actively look. This plugin bundles a `convex-plugin`
@@ -236,7 +206,7 @@ Call the **`fix_errors_automatically`** tool with `projectDir` set to your app's
 **absolute path** (the `convex-app/` subdir, where `.env.local` lives). It BLOCKS
 until the next event, then returns one of:
 - `feature_request` / `refinement_answer` → the user wants something — handle it
-  (loop back through STEP 2/3), then call the tool again.
+  (loop back through STEP 2), then call the tool again.
 - `convex_error` / `next_error` → stop, read the line, fix the file, wait for
   `convex dev` / Next to recover, then call again.
 - `quiet` → heartbeat timeout, nothing happened — just call it again.
