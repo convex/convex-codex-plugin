@@ -9,19 +9,19 @@
 
 | Surface | What it is | Update mechanism |
 |---|---|---|
-| **A. ChatGPT app** `asdk_app_6a0faef988b48191b843bac5cd170a9e` ("Convex", shows ~v2.0.0 in ChatGPT) | A **live hosted MCP server** = **`mcp.convex.dev`** (`get-convex/openai-mcp`, Vercel). Its "tools" (`start_convex_app`, `get_runbook`, `add_convex_to_existing_project`, `get_scaling_guidance`, + Tier-2 `publish_app`/`register_domain`/`query_prod_errors`) ARE the app. | **platform.openai.com/plugins** (needs `api.apps.write`): new **draft** of the existing app → **scan the live MCP endpoint** → release notes → submit for review → publish. OpenAI connects to the live endpoint; it does **not** take an upload or a repo. |
+| **A. ChatGPT app** `asdk_app_6a0faef988b48191b843bac5cd170a9e` ("Convex", shows ~v2.0.0 in ChatGPT) | A **live hosted MCP server** = **`mcp.convex.dev`** (`convex/openai-mcp`, Vercel). Its "tools" (`start_convex_app`, `get_runbook`, `add_convex_to_existing_project`, `get_scaling_guidance`, + Tier-2 `publish_app`/`register_domain`/`query_prod_errors`) ARE the app. | **platform.openai.com/plugins** (needs `api.apps.write`): new **draft** of the existing app → **scan the live MCP endpoint** → release notes → submit for review → publish. OpenAI connects to the live endpoint; it does **not** take an upload or a repo. |
 | **B. Codex-CLI curated plugin** `convex@openai-curated` (v0.1.2 husk, 0 skills) | A bundled **Codex CLI plugin** snapshot in OpenAI's **curated marketplace** (a different distribution channel from the Apps SDK). | **Unconfirmed / OpenAI-internal.** The curated marketplace has no public PR path we've found. Whether the Apps-SDK app submission (A) also refreshes this bundle, or it's a separate curation, is **not verified**. |
 
 This repo (`plugins/convex/`, currently **v0.7.2**, 17 skills + 2 MCP servers) is the
 source for surface B and for the **GitHub-marketplace** install below. It is **not**
-what backs surface A — that's the `mcp.convex.dev` MCP server in `get-convex/openai-mcp`.
+what backs surface A — that's the `mcp.convex.dev` MCP server in `convex/openai-mcp`.
 
 ## Surface A — updating the ChatGPT app (the confirmed path)
 
 The big lever: **the MCP tools serve their content LIVE.** Refreshing what a tool
 returns (e.g. the runbook behind `get_runbook`) reaches **every user, any app version,
 on their next call — with no reconnect and no re-review** (only the tool *surface* is
-reviewed, not the content). That content refresh happens in `get-convex/openai-mcp`
+reviewed, not the content). That content refresh happens in `convex/openai-mcp`
 (e.g. `npm run sync:runbook` → deploy), independent of any OpenAI submission.
 
 A **re-submission** is only needed to catch the *reviewed surface* up (the reviewed
@@ -49,7 +49,7 @@ to resolve with an OpenAI contact**, not something we can fix from this repo.
 The **GitHub marketplace** always serves this repo's HEAD (v0.7.2, full plugin):
 
 ```bash
-codex plugin marketplace add get-convex/convex-codex-plugin
+codex plugin marketplace add convex/convex-codex-plugin
 codex plugin add convex@convex-codex-plugin
 ```
 

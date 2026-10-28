@@ -7,7 +7,7 @@ Use this when an app needs a backend: database schema, reactive queries, mutatio
 ## Install (Codex CLI) — use this, it's the current build
 
 ```bash
-codex plugin marketplace add get-convex/convex-codex-plugin
+codex plugin marketplace add convex/convex-codex-plugin
 codex plugin add convex@convex-codex-plugin
 ```
 
